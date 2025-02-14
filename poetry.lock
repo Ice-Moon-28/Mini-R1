@@ -294,6 +294,29 @@ tests = ["cloudpickle", "hypothesis", "mypy (>=1.11.1)", "pympler", "pytest (>=4
 tests-mypy = ["mypy (>=1.11.1)", "pytest-mypy-plugins"]
 
 [[package]]
+name = "bitsandbytes"
+version = "0.45.2"
+description = "k-bit optimizers and matrix multiplication routines."
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+markers = "python_version <= \"3.11\" or python_version >= \"3.12\""
+files = [
+    {file = "bitsandbytes-0.45.2-py3-none-manylinux_2_24_x86_64.whl", hash = "sha256:ba3a720187f518b172ebce4081049c682ae3fd8284947e22499b256ff99a2bc3"},
+    {file = "bitsandbytes-0.45.2-py3-none-win_amd64.whl", hash = "sha256:e1893170455422924156760bae9e210ae26e8bd2ce7b21065d24b47decbe6963"},
+]
+
+[package.dependencies]
+numpy = ">=1.17"
+torch = ">=2.0,<3"
+
+[package.extras]
+benchmark = ["matplotlib", "pandas"]
+dev = ["bitsandbytes[test]", "build (>=1.0.0,<2)", "pre-commit (>=3.5.0,<4)", "ruff (==0.6.9)", "wheel (>=0.42,<1)"]
+docs = ["hf-doc-builder (==0.5.0)"]
+test = ["einops (>=0.8.0,<0.9.0)", "lion-pytorch (==0.2.3)", "pytest (>=8.3,<9.0)", "scipy (>=1.10.1,<2)", "scipy (>=1.11.4,<2)", "transformers (>=4.30.1,<5)"]
+
+[[package]]
 name = "blake3"
 version = "1.0.4"
 description = "Python bindings for the Rust blake3 crate"
@@ -4848,15 +4871,15 @@ tutorials = ["matplotlib", "pandas", "tabulate"]
 
 [[package]]
 name = "trl"
-version = "0.14.0"
+version = "0.15.0"
 description = "Train transformer language models with reinforcement learning."
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 markers = "python_version <= \"3.11\" or python_version >= \"3.12\""
 files = [
-    {file = "trl-0.14.0-py3-none-any.whl", hash = "sha256:2407df4ea0e92d2c228a49f92047b4856b2e09bdfc1cde2b2151d342092efee2"},
-    {file = "trl-0.14.0.tar.gz", hash = "sha256:ddbd73b12e870a9acb8c50bfa5704de88eb519e4aad5bd9e91177b2f93b908d8"},
+    {file = "trl-0.15.0-py3-none-any.whl", hash = "sha256:5e23c84e9773c77ed41ae0d8ae03eee5f9224973000aa0d272a25c727402bdb6"},
+    {file = "trl-0.15.0.tar.gz", hash = "sha256:16fc2d906e09428192744062938c6135fa42c467203f0154d8b7de8c915b1930"},
 ]
 
 [package.dependencies]
@@ -4867,7 +4890,7 @@ transformers = ">=4.46.0"
 
 [package.extras]
 deepspeed = ["deepspeed (>=0.14.4)"]
-dev = ["Pillow", "Pillow", "bitsandbytes", "bitsandbytes", "deepspeed (>=0.14.4)", "deepspeed (>=0.14.4)", "diffusers (>=0.18.0)", "diffusers (>=0.18.0)", "liger-kernel (>=0.4.0)", "liger-kernel (>=0.4.0)", "llm-blender (>=0.0.2)", "llm-blender (>=0.0.2)", "mergekit (>=0.0.5.1)", "mergekit (>=0.0.5.1)", "openai (>=1.23.2)", "openai (>=1.23.2)", "parameterized", "parameterized", "peft (>=0.8.0)", "peft (>=0.8.0)", "pytest", "pytest", "pytest-cov", "pytest-cov", "pytest-rerunfailures", "pytest-rerunfailures", "pytest-xdist", "pytest-xdist", "scikit-learn", "scikit-learn", "vllm", "vllm"]
+dev = ["Pillow", "Pillow", "bitsandbytes", "bitsandbytes", "deepspeed (>=0.14.4)", "deepspeed (>=0.14.4)", "diffusers (>=0.18.0)", "diffusers (>=0.18.0)", "liger-kernel (>=0.4.0)", "liger-kernel (>=0.4.0)", "llm-blender (>=0.0.2)", "llm-blender (>=0.0.2)", "mergekit (>=0.0.5.1)", "mergekit (>=0.0.5.1)", "openai (>=1.23.2)", "openai (>=1.23.2)", "parameterized", "parameterized", "peft (>=0.8.0)", "peft (>=0.8.0)", "pytest", "pytest", "pytest-cov", "pytest-cov", "pytest-rerunfailures", "pytest-rerunfailures", "pytest-xdist", "pytest-xdist", "scikit-learn", "scikit-learn", "vllm (>=0.7.1)", "vllm (>=0.7.1)"]
 diffusers = ["diffusers (>=0.18.0)"]
 judges = ["llm-blender (>=0.0.2)", "openai (>=1.23.2)"]
 liger = ["liger-kernel (>=0.4.0)"]
@@ -4876,7 +4899,7 @@ peft = ["peft (>=0.8.0)"]
 quantization = ["bitsandbytes"]
 scikit = ["scikit-learn"]
 test = ["parameterized", "pytest", "pytest-cov", "pytest-rerunfailures", "pytest-xdist"]
-vllm = ["vllm"]
+vllm = ["vllm (>=0.7.1)"]
 vlm = ["Pillow"]
 
 [[package]]
@@ -5727,4 +5750,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "<4.0, >=3.9"
-content-hash = "9bed6b103d8fc78ee99b6bc583c41f963ba29ecafcb4d2b0f5fc92204a147082"
+content-hash = "094edc1e2ebb0ea871c3b74ae51b7c2f81e82e64a337109241d134559f5db127"

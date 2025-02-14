@@ -1,0 +1,9 @@
+[2025-02-14 04:05:45,344] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+INFO 02-14 04:05:47 __init__.py:183] Automatically detected platform cuda.
+[1m[31mCannot authenticate through git-credential as no helper is defined on your machine.
+You might have to re-authenticate when pushing to the Hugging Face Hub.
+Run the following command in your terminal in case you want to set the 'store' credential helper as default.
+
+git config --global credential.helper store
+
+Read https://git-scm.com/book/en/v2/Git-Tools-Credential-Storage for more details.[0m

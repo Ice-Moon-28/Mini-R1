@@ -7,3 +7,5 @@ wandb/**
 **/__pycache__/**
 
 settings.py
+
+qwen-r1-aha-moment/**
