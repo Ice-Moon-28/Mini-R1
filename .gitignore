@@ -9,3 +9,5 @@ wandb/**
 settings.py
 
 qwen-r1-aha-moment/**
+
+runs/**

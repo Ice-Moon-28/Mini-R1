@@ -2,13 +2,15 @@ model_name_or_path: Qwen/Qwen2.5-3B-Instruct
 model_revision: main
 torch_dtype: bfloat16
 attn_implementation: flash_attention_2
-bf16: true
-tf32: true
+# bf16: true
+# tf32: true
+use_peft: True
+load_in_4bit: True
 output_dir: runs/qwen-2.5-3b-r1-countdown
 
-
+dataset_id_or_path: 'guessing'
 # Dataset arguments
-dataset_name: 'countdown'
+dataset_name: 'guessing'
 # Lora Arguments
 # No LoRA is used here
 
@@ -27,19 +29,18 @@ beta: 0.001 # 0.04 as in the deepseek math paper 0.001 from https://hijkzzz.noti
 max_prompt_length: 256
 max_completion_length: 1024
 num_generations: 2
-use_vllm: False
+use_vllm: false
 model_init_kwargs:
-  use_cache: False
+  use_cache: false
 # vllm_device: "cuda:3"
 # vllm_gpu_memory_utilization: 0.3
-log_completions: True
 output_dir: runs/qwen_2.5_count_down
 
 # Logging arguments
 logging_strategy: steps
 logging_steps: 2
 report_to:
-- tensorboard
+- wandb
 save_strategy: "steps"
 save_steps: 25
 seed: 42

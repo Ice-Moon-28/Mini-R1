@@ -4,14 +4,19 @@ deepspeed_config:
   deepspeed_multinode_launcher: standard
   offload_optimizer_device: none
   offload_param_device: none
-  zero3_init_flag: true
-  zero3_save_16bit_model: true
-  zero_stage: 3
+  zero_stage: 2  # QLoRA 最佳選擇，支持混合精度和低比特量化
+  bf16: false    # 關閉 bf16 以避免與 4-bit 衝突
+  fp16: false    # 關閉 fp16
+  gradient_accumulation_steps: 1
+  gradient_checkpointing: true
+  gradient_checkpointing_kwargs:
+    use_reentrant: false
+  train_micro_batch_size_per_gpu: 1
 distributed_type: DEEPSPEED
-downcast_bf16: 'no'
 machine_rank: 0
 main_training_function: main
-mixed_precision: bf16
+downcast_bf16: 'no'
+mixed_precision: 'no'
 num_machines: 1
 num_processes: 1
 rdzv_backend: static

@@ -1,5 +1,7 @@
+from dataset.guess_word import GuessWordDataset
 from transformers import AutoTokenizer
 from datasets import load_dataset
+import os
  
 def get_countdown_dataset(tokenizer):
     dataset = load_dataset("Jiayi-Pan/Countdown-Tasks-3to4", split="train")
@@ -22,3 +24,4 @@ def get_countdown_dataset(tokenizer):
     dataset = dataset.map(lambda x: generate_r1_prompt(x["nums"], x["target"]))
 
     return dataset
+
