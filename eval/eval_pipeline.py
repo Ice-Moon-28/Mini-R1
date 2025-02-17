@@ -29,7 +29,7 @@ def evaluate(model_name, dataset_name):
 
     dataloader = DataLoader(dataset, batch_size=32, shuffle=False, collate_fn=collect_fn)
 
-    reward_fn = get_reward(name=dataset_name)[0]
+    reward_fns = get_reward(name=dataset_name)
 
     predictions, targets, rewards = [], [], []
     print("🔍 Starting Evaluation...")
@@ -47,20 +47,25 @@ def evaluate(model_name, dataset_name):
         # Tokenize and generate prediction
         with torch.no_grad():
             output = model.generate(**prompt, max_length=1024)
+
+        total_output = tokenizer.batch_decode(output, skip_special_tokens=True)
         
-        prediction = tokenizer.batch_decode(output, skip_special_tokens=True)
+        pure_completions = [pred[len(prompt_text):] for pred, prompt_text in zip(output, prompt['input_ids'])]
 
-        reward_score = reward_fn(prediction, target)
+        prediction = tokenizer.batch_decode(pure_completions, skip_special_tokens=True)
 
-        rewards.extend(reward_score)
+        reward_scores = [fn(prediction, target) for fn in reward_fns]
+
+        rewards.extend(reward_scores)
         
         for i in range(len(original_prompt)):
             print("-" * 60)
-            prediction_i = prediction[i]
+            total_output_i= total_output[i]
             answer_i = target[i]
-            print(f"🤖 Prediction: {prediction_i}")
+            print(f"🤖 Output: {total_output_i}")
             print(f"🎯 Target: {answer_i}")
-            print(f"🏆 Reward: {reward_score[i]}")
+            for reward_score in reward_scores:
+                print(f"🏆 Reward: {reward_score[i]}")
 
             print("-" * 60)
 

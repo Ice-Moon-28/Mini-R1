@@ -12,13 +12,14 @@ def format_reward_func(completions, target, **kwargs):
     """
     rewards = []
  
-    for completion, gt in zip(completions, target):
- 
+    for completion in completions:
+
         try:
             # add synthetic <think> as its already part of the prompt and prefilled for the assistant to more easily match the regex
-            completion = "<think>" + completion        
+            completion = "<think>" + completion
+
             # Check if the format is correct
-            regex = r"^<think>([^<]*(?:<(?!/?think>)[^<]*)*)<\/think>\n*<answer>([\s\S]*?)<\/answer>$"
+            regex = r"<think>([\s\S]*?)<\/think>[\s]*<answer>([\s\S]*?)<\/answer>"
     
             match = re.search(regex, completion, re.DOTALL) 
             # if the format is not correct, reward is 0
@@ -49,6 +50,8 @@ def guess_word_reward_func(completions, target, **kwargs):
 
     for completion, gt in zip(completions, target):
         try:
+            completion = "<think>" + completion   
+
             answer_match = re.findall(r"<answer>([\s\S]*?)<\/answer>", completion, re.DOTALL)
 
             if answer_match is None:
@@ -89,28 +92,18 @@ def guess_word_reward_func(completions, target, **kwargs):
 
 if __name__ == "__main__":
     correct_completion = """
-    根据提示词，我们可以推断出可能的成语是'蒸蒸日上'。
-    <think>手游兴盛，叠词，通常用于描述事物蓬勃发展，答案应是‘蒸蒸日上’。</think>
+    手游兴盛，叠词，通常用于描述事物蓬勃发展，答案应是‘蒸蒸日上’。</think>
     <answer>蒸蒸日上</answer>
     """
 
     correct_completion2 = """
-    根据提示内容，我们推测该成语是‘泰山北斗’。
-    <think>描述受人敬仰的成语，含有地名和星宿名。泰山和北斗均为具有代表性的元素，答案是‘泰山北斗’。</think>
+   描述受人敬仰的成语，含有地名和星宿名。泰山和北斗均为具有代表性的元素，答案是‘泰山北斗’。</think>
     <answer>泰山北斗</answer>
     """
 
 
     correct_completion3 = """
-    system
-    你是一个乐于助人的助手。在回答之前会在脑中先思考推理过程，然后再为用户提供答案。
-    user
-    以下提示词：1.黑色 2.金 3.鲁滨逊 4.金曜日。
-    请推测出与这些提示相关的词语。
-    请在<think> </think>标签内展示推理过程，并在<answer> </answer>标签内给出答案。
-    assistant
-    让我一步步推理。
-    <think>首先，我们来分析每个提示词的含义和可能的关联领域：</think>
+    首先，我们来分析每个提示词的含义和可能的关联领域：</think>
     1. 黑色 - 这个词通常与颜色相关，常见于描述物品的颜色属性。
     2. 金 - 这个词也与颜色有关，指的是金色，常用于形容贵金属。
     3. 鲁滨逊 - 这个词是人名，但更有可能是指英国小说家丹尼尔·笛福的著作《鲁滨逊漂流记》中的主人公。
@@ -129,21 +122,26 @@ if __name__ == "__main__":
     """
 
     missing_answer = """
-    <think>手游兴盛，叠词，答案可能是‘蒸蒸日上’。</think>
+    手游兴盛，叠词，答案可能是‘蒸蒸日上’。</think>
     """
 
     wrong_answer = """
-    <think>手游兴盛，叠词，答案可能是‘风生水起’。</think>
+    手游兴盛，叠词，答案可能是‘风生水起’。</think>
     <answer>风生水起</answer>
     """
-
-
 
     test_rewards = guess_word_reward_func(
         completions=[correct_completion, correct_completion2, correct_completion3, correct_completion, correct_completion2, correct_completion3, missing_answer, wrong_answer],
         target=["蒸蒸日上", "泰山北斗", "星期五", ["蒸蒸日上", "泰山北斗"] , ["泰山北斗", "蒸蒸日上"], ["蒸蒸日上", "泰山北斗"], "蒸蒸日上", "蒸蒸日上"]
     )
 
-    # ✅ 预期输出: [1.0, 1.0, 0.0, 0.0]
+    test_reward_format = format_reward_func(
+        completions=[correct_completion, correct_completion2, correct_completion3, correct_completion, correct_completion2, correct_completion3, missing_answer, wrong_answer],
+        target=["蒸蒸日上", "泰山北斗", "星期五", ["蒸蒸日上", "泰山北斗"] , ["泰山北斗", "蒸蒸日上"], ["蒸蒸日上", "泰山北斗"], "蒸蒸日上", "蒸蒸日上"]
+    )
+
     print("Test Rewards:", test_rewards)
     assert test_rewards == [1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0], "Reward function is not working correctly."
+
+    print("Test format Rewards", test_reward_format)
+    assert test_reward_format == [1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0], "Reward function is not working correctly."
