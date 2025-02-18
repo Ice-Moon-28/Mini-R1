@@ -1,5 +1,6 @@
 import os
 from dataset.get_dataset import get_collect_fn, get_dataset
+from model.get_model import get_model
 from reward.get_reward import get_reward
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
@@ -16,11 +17,15 @@ def evaluate(model_name, dataset_name):
     os.makedirs(cache_dir, exist_ok=True)
     os.environ["HF_HOME"] = cache_dir
 
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    tokenizer.pad_token = tokenizer.eos_token
-    tokenizer.padding_side = "left"
+
+    model, tokenizer = get_model(
+        model_name=model_name,
+        model_config={
+            "torch_dtype": torch.bfloat16,
+        },
+    )
     
-    model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.bfloat16).cuda()
+    model = model.cuda()
     model.eval()
 
     dataset = get_dataset(name=dataset_name, tokenizer=tokenizer)
@@ -46,7 +51,7 @@ def evaluate(model_name, dataset_name):
 
         # Tokenize and generate prediction
         with torch.no_grad():
-            output = model.generate(**prompt, max_length=1024)
+            output = model.generate(**prompt, max_new_tokens=768)
 
         total_output = tokenizer.batch_decode(output, skip_special_tokens=True)
         
@@ -64,8 +69,9 @@ def evaluate(model_name, dataset_name):
             answer_i = target[i]
             print(f"🤖 Output: {total_output_i}")
             print(f"🎯 Target: {answer_i}")
-            for reward_score in reward_scores:
-                print(f"🏆 Reward: {reward_score[i]}")
+            for j in range(len(reward_scores)):
+                reward_score = reward_scores[j]
+                print(f"🏆 Reward{j}: {reward_score[i]}")
 
             print("-" * 60)
 
@@ -81,7 +87,7 @@ def main():
 
     set_seed(seed=3047)
     # 参数配置
-    model_name = "Qwen/Qwen2.5-3B-Instruct"
+    model_name = "Qwen/Qwen2.5-7B"
     dataset_name = "guessing"
 
     # 调用评估函数
