@@ -1,3 +1,4 @@
+import random
 import re
 
 def format_reward_func(completions, target, **kwargs):
@@ -24,11 +25,21 @@ def format_reward_func(completions, target, **kwargs):
             match = re.search(regex, completion, re.DOTALL) 
             # if the format is not correct, reward is 0
             if match is None or len(match.groups()) != 2:
-                rewards.append(0.0)
+                think_pattern = r"<think>([\s\S]*?)<\/think>"
+                answer_pattern = r"<answer>([\s\S]*?)<\/answer>"
+
+                think_match = re.search(think_pattern, completion, re.DOTALL)
+                answer_match = re.search(answer_pattern, completion, re.DOTALL)
+
+                # Check for matches
+                if think_match or answer_match:
+                    rewards.append(0.5)
+                else:
+                    rewards.append(-1.0)
             else:
                 rewards.append(1.0)
         except Exception:
-            rewards.append(0.0)
+            rewards.append(-1.0)
 
     print(rewards)
 
@@ -55,7 +66,7 @@ def guess_word_reward_func(completions, target, **kwargs):
             answer_match = re.findall(r"<answer>([\s\S]*?)<\/answer>", completion, re.DOTALL)
 
             if answer_match is None:
-                rewards.append(0.0)
+                rewards.append(-2.0)
                 continue
 
             answers = [ans.strip() for ans in answer_match]
@@ -66,8 +77,14 @@ def guess_word_reward_func(completions, target, **kwargs):
                 # gt 为字符串的处理逻辑
                 for answer in answers:
                     if gt in answer:
-                        rewards.append(1.0)
+                        rewards.append(2.0)
                         matched = True
+                        if random.random() < 0.2:
+                            try:
+                                with open("true_answer.txt", "a") as f:
+                                    f.write(f"Completion: {completion}\nTarget: {gt}\n\n")
+                            except Exception as e:
+                                print(f"[Warning] Failed to write correct answer to file: {e}")
                         break
 
             elif isinstance(gt, list):
@@ -75,19 +92,39 @@ def guess_word_reward_func(completions, target, **kwargs):
                 for answer in answers:
                     match_found = any(target in answer for target in gt)
                     if match_found:
-                        rewards.append(1.0)
+                        rewards.append(2.0)
                         matched = True
                         break
 
             if not matched:
-                rewards.append(0.0)
+                rewards.append(-2.0)
 
         except Exception:
-            rewards.append(0.0)
+            rewards.append(-2.0)
 
     return rewards
 
-
+def length_reward_func(completions, target, **kwargs):
+    """
+    Rewards completions based on their length.
+    
+    Args:
+        completions (list[str]): Generated outputs.
+        threshold (int): Minimum length to qualify for a reward.
+        reward (float): Reward score for meeting the length requirement.
+        penalty (float): Penalty score for not meeting the length requirement.
+    
+    Returns:
+        list[float]: Length-based reward scores.
+    """
+    rewards = []
+    for completion in completions:
+        # 检查 completion 的长度
+        if len(completion) >= 400:
+            rewards.append(1.0)
+        else:
+            rewards.append(-1.0)
+    return rewards
 
 
 if __name__ == "__main__":
@@ -121,6 +158,11 @@ if __name__ == "__main__":
     </answer>
     """
 
+    missing_think = """
+    手游兴盛，叠词，答案可能是‘风生水起’。
+    <answer>风生水起</answer>
+    """
+
     missing_answer = """
     手游兴盛，叠词，答案可能是‘蒸蒸日上’。</think>
     """
@@ -136,7 +178,7 @@ if __name__ == "__main__":
     )
 
     test_reward_format = format_reward_func(
-        completions=[correct_completion, correct_completion2, correct_completion3, correct_completion, correct_completion2, correct_completion3, missing_answer, wrong_answer],
+        completions=[correct_completion, correct_completion2, correct_completion3, correct_completion, correct_completion2, correct_completion3, missing_answer, wrong_answer, missing_think],
         target=["蒸蒸日上", "泰山北斗", "星期五", ["蒸蒸日上", "泰山北斗"] , ["泰山北斗", "蒸蒸日上"], ["蒸蒸日上", "泰山北斗"], "蒸蒸日上", "蒸蒸日上"]
     )
 
@@ -144,4 +186,4 @@ if __name__ == "__main__":
     assert test_rewards == [1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0], "Reward function is not working correctly."
 
     print("Test format Rewards", test_reward_format)
-    assert test_reward_format == [1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0], "Reward function is not working correctly."
+    assert test_reward_format == [1.0, 1.0, 0.5, 1.0, 1.0, 0.5, 0.5, 1.0, 0.5], "Reward function is not working correctly."

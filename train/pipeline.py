@@ -204,6 +204,12 @@ def get_checkpoint(training_args: GRPOConfig):
 
 import os
 
+def get_checkpoint(training_args: GRPOConfig):
+    last_checkpoint = None
+    if os.path.isdir(training_args.output_dir):
+        last_checkpoint = get_last_checkpoint(training_args.output_dir)
+    return last_checkpoint
+
 cache_dir = '/root/autodl-tmp/minir1'
 
 @dataclass
@@ -227,9 +233,14 @@ def train(
 
     tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-3B-Instruct", cache_dir=cache_dir)
 
-    dataset = get_dataset(name=script_args.dataset_id_or_path, tokenizer=tokenizer)
+    last_checkpoint = get_checkpoint(training_args)
+    if last_checkpoint is not None and training_args.resume_from_checkpoint is None:
+        logger.info(f"Checkpoint detected, resuming training at {last_checkpoint}.")
 
-    split_dataset = dataset.train_test_split(test_size=0.2)
+    dataset = get_dataset(name=script_args.dataset_id_or_path, tokenizer=tokenizer)
+    dataset = dataset.filter(lambda example: example['label'] == 'association')
+
+    split_dataset = dataset.train_test_split(test_size=0.1)
 
     train_dataset, test_dataset = split_dataset['train'], split_dataset['test']
 
@@ -245,12 +256,26 @@ def train(
         callbacks=[PrinterCallback()]
     )
 
-    trainer.train()
+
+    if last_checkpoint is not None:
+        train_result = trainer.train(resume_from_checkpoint=last_checkpoint)
+
+    else:
+        train_result = trainer.train()
+
+    metrics = train_result.metrics
+    metrics["train_samples"] = len(train_dataset)
+    trainer.log_metrics("train", metrics)
+    trainer.save_metrics("train", metrics)
+    trainer.save_state()
 
 
 def main():
     parser = TrlParser((ModelConfig, ScriptArguments, GRPOConfig))
+
     model_args, script_args, training_args = parser.parse_args_and_config()
+
+    training_args.max_grad_norm = 1.0
 
     # Run the main training loop
     train(model_args, script_args, training_args)

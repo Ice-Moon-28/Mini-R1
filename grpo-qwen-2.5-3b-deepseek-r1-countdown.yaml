@@ -2,11 +2,11 @@ model_name_or_path: Qwen/Qwen2.5-3B-Instruct
 model_revision: main
 torch_dtype: bfloat16
 attn_implementation: flash_attention_2
-# bf16: true
-# tf32: true
+bf16: true
+tf32: true
 use_peft: True
 load_in_4bit: True
-output_dir: runs/qwen-2.5-3b-r1-countdown
+output_dir: runs/qwen-2.5-3b-r1-guessing
 
 dataset_id_or_path: 'guessing'
 # Dataset arguments
@@ -15,26 +15,33 @@ dataset_name: 'guessing'
 # No LoRA is used here
 
 # Training arguments
-max_steps: 450
-per_device_train_batch_size: 1
-gradient_accumulation_steps: 8
+
+max_steps: 500
+per_device_train_batch_size: 10
+gradient_accumulation_steps: 4
 gradient_checkpointing: true
 gradient_checkpointing_kwargs:
   use_reentrant: false
-learning_rate: 5.0e-7 # 1.0e-6 as in the deepseek math paper 5-e7 from https://hijkzzz.notion.site/unraveling-rlhf-and-its-variants-engineering-insights#147d9a33ecc9806090f3d5c749d31f05
+learning_rate: 1e-6 # 1.0e-6 as in the deepseek math paper 5-e7 from https://hijkzzz.notion.site/unraveling-rlhf-and-its-variants-engineering-insights#147d9a33ecc9806090f3d5c749d31f05
 lr_scheduler_type: cosine
-warmup_ratio: 0.03
+warmup_ratio: 0.05
 # GRPO specific parameters
 beta: 0.001 # 0.04 as in the deepseek math paper 0.001 from https://hijkzzz.notion.site/unraveling-rlhf-and-its-variants-engineering-insights#147d9a33ecc9806090f3d5c749d31f05
 max_prompt_length: 256
 max_completion_length: 1024
-num_generations: 8
-use_vllm: false
+num_generations: 10
+use_vllm: True
+max_grad_norm: 1.0
+log_completions: True
 model_init_kwargs:
   use_cache: false
-# vllm_device: "cuda:3"
-# vllm_gpu_memory_utilization: 0.3
-output_dir: runs/qwen_2.5_count_down
+vllm_device: "cuda:0"
+vllm_gpu_memory_utilization: 0.5
+eval_strategy: steps  # 启用评估策略
+eval_steps: 100              # 每 50 步进行一次评估
+per_device_eval_batch_size: 20  # 设置评估时的 batch size
+eval_accumulation_steps: 1     # 累积梯度步数（可选）
+resume_from_checkpoint: True
 
 # Logging arguments
 logging_strategy: steps
