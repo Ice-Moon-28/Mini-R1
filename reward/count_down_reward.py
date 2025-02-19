@@ -17,7 +17,7 @@ def format_reward_func(completions, target, **kwargs):
             # add synthetic <think> as its already part of the prompt and prefilled for the assistant to more easily match the regex
             completion = "<think>" + completion        
             # Check if the format is correct
-            regex = r"^<think>([^<]*(?:<(?!/?think>)[^<]*)*)<\/think>\n*<answer>([\s\S]*?)<\/answer>$"
+            regex = r"^<think>([^<]*(?:<(?!/?think>)[^<]*)*)<\/think>[\s]*<answer>([\s\S]*?)<\/answer>$"
     
             match = re.search(regex, completion, re.DOTALL) 
             # if the format is not correct, reward is 0

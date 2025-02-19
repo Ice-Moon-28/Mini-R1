@@ -1,5 +1,5 @@
 # Model arguments
-model_name_or_path: Qwen/Qwen2.5-3B-Instruct
+model_name_or_path: Qwen/Qwen2.5-3B
 model_revision: main
 torch_dtype: bfloat16
 attn_implementation: flash_attention_2
@@ -41,7 +41,7 @@ report_to:
 - wandb
 save_strategy: "steps"
 save_steps: 25
-save_total_limit: 1  
+save_total_limit: 2
 seed: 42
 
 # Hugging Face Hub 
