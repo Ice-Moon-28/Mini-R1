@@ -238,7 +238,7 @@ def train(
         logger.info(f"Checkpoint detected, resuming training at {last_checkpoint}.")
 
     dataset = get_dataset(name=script_args.dataset_id_or_path, tokenizer=tokenizer)
-    dataset = dataset.filter(lambda example: example['label'] == 'association')
+    # dataset = dataset.filter(lambda example: example['label'] == 'association')
 
     split_dataset = dataset.train_test_split(test_size=0.1)
 
@@ -256,6 +256,7 @@ def train(
         callbacks=[PrinterCallback()]
     )
 
+    print("LoRA Config:", get_peft_config(model_args))
 
     if last_checkpoint is not None:
         train_result = trainer.train(resume_from_checkpoint=last_checkpoint)
