@@ -258,11 +258,11 @@ def train(
 
     print("LoRA Config:", get_peft_config(model_args))
 
-    if last_checkpoint is not None:
-        train_result = trainer.train(resume_from_checkpoint=last_checkpoint)
+    # if last_checkpoint is not None:
+        # train_result = trainer.train(resume_from_checkpoint=last_checkpoint)
 
-    else:
-        train_result = trainer.train()
+    # else:
+    train_result = trainer.train()
 
     metrics = train_result.metrics
     metrics["train_samples"] = len(train_dataset)

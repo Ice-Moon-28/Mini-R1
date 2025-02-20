@@ -84,7 +84,8 @@ def equation_reward_func(completions, target, nums, **kwargs):
     return rewards
 
 if __name__ == "__main__":
-    correct_sample_1 = """We need to find an equation using the numbers 19, 36, 55, and 7 exactly once, with basic arithmetic operations, that equals 65. One possible combination is 55 + 36 - 19 + 7... </think><answer> 55 + 36 - 7 - 19 </answer>"""
+    correct_sample_1 = """We need to find an equation using the numbers 19, 36, 55, and 7 exactly once, with basic arithmetic operations, that equals 65. One possible combination is 55 + 36 - 19 + 7... </think>
+    <answer> 55 + 36 - 7 - 19 </answer>"""
     
     correct_sample_2 = """ ... </think><answer> 55 + 36 - 7 - 19 </answer>"""
     
