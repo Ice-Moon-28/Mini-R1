@@ -54,6 +54,17 @@ def format_reward_func(completions, target, **kwargs):
 
     print(rewards)
 
+    with open('format', "a+", encoding="utf-8") as f:
+        for i in range(len(completions)):
+            f.write("-" * 60 + "\n")
+            comp = completions[i]
+            answer = target[i]
+            f.write(f"🤖 Output: {comp}\n")
+            f.write(f"🎯 Target: {answer}\n")  
+
+            f.write(f"🏆 Reward1: {rewards[i]}\n")
+            f.write("-" * 60 + "\n")
+
     return rewards
 
 def guess_word_reward_func(completions, target, **kwargs):
@@ -90,7 +101,7 @@ def guess_word_reward_func(completions, target, **kwargs):
                     if gt in answer:
                         rewards.append(2.0 if len(gt) == len(answer) else 1.5)
                         matched = True
-                        with open("true_answer.txt", "a") as f:
+                        with open("true_answer_3b.txt", "a") as f:
                             f.write(f"Completion: {completion}\nTarget: {gt}\n\n")
 
             elif isinstance(gt, list):
@@ -98,8 +109,10 @@ def guess_word_reward_func(completions, target, **kwargs):
                 for answer in answers:
                     match_found = any(target in answer for target in gt)
                     if match_found:
-                        rewards.append(2.0)
+                        rewards.append(2.0 if len(gt) == len(answer) else 1.5)
                         matched = True
+                        with open("true_answer_3b.txt", "a") as f:
+                            f.write(f"Completion: {completion}\nTarget: {gt}\n\n")
                         break
 
             if not matched:
@@ -107,6 +120,20 @@ def guess_word_reward_func(completions, target, **kwargs):
 
         except Exception:
             rewards.append(0.0)
+
+    with open('accuracy', "a+", encoding="utf-8") as f:
+        for i in range(len(completions)):
+            f.write("-" * 60 + "\n")
+            comp = completions[i]
+            answer = target[i]
+            f.write(f"🤖 Output: {comp}\n")
+            f.write(f"🎯 Target: {answer}\n")  
+
+            f.write(f"🏆 Reward1: {rewards[i]}\n")
+            f.write("-" * 60 + "\n")
+
+
+        
 
     return rewards
 

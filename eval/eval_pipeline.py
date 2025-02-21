@@ -9,21 +9,35 @@ import re
 from torch.utils.data import DataLoader
 from settings import device
 from util.set_seed import set_seed
+from trl import GRPOConfig
+from transformers.trainer_utils import get_last_checkpoint
 
 cache_dir = '/root/autodl-tmp/minir1'
 
-def evaluate(model_name, dataset_name):
+def get_checkpoint(output_dir):
+    last_checkpoint = None
+    if os.path.isdir(output_dir):
+        last_checkpoint = get_last_checkpoint(output_dir)
+    return last_checkpoint
+
+def evaluate(model_name, dataset_name, load_from_checkpoint=True):
     # 创建缓存目录
     os.makedirs(cache_dir, exist_ok=True)
     os.environ["HF_HOME"] = cache_dir
 
+    if load_from_checkpoint:
+        checkpoint_path = "/root/autodl-tmp/runs/checkpoint-550"
+        model = AutoModelForCausalLM.from_pretrained(checkpoint_path)
+        tokenizer = AutoTokenizer.from_pretrained(checkpoint_path)
+    else:
+        model, tokenizer = get_model(
+            model_name=model_name,
+            model_config={
+                "torch_dtype": torch.bfloat16,
+            },
+        )
 
-    model, tokenizer = get_model(
-        model_name=model_name,
-        model_config={
-            "torch_dtype": torch.bfloat16,
-        },
-    )
+    import pdb; pdb.set_trace()
     
     model = model.cuda()
     model.eval()
@@ -32,7 +46,7 @@ def evaluate(model_name, dataset_name):
 
     collect_fn = get_collect_fn(name=dataset_name, tokenizer=tokenizer)
 
-    dataloader = DataLoader(dataset, batch_size=32, shuffle=False, collate_fn=collect_fn)
+    dataloader = DataLoader(dataset, batch_size=128, shuffle=False, collate_fn=collect_fn)
 
     reward_fns = get_reward(name=dataset_name)
 
@@ -91,4 +105,4 @@ def main():
     dataset_name = "guessing"
 
     # 调用评估函数
-    evaluate(model_name, dataset_name)
+    evaluate(model_name, dataset_name, True)

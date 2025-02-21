@@ -134,22 +134,7 @@ def get_checkpoint(training_args: GRPOConfig):
 #     # Save model and create model card
 #     ##################################
 
-#     logger.info("*** Save model ***")
-#     trainer.model.config.use_cache = True
-#     trainer.save_model(training_args.output_dir)
-#     logger.info(f"Model saved to {training_args.output_dir}")
-#     training_args.distributed_state.wait_for_everyone()  # wait for all processes to load
 
-#     tokenizer.save_pretrained(training_args.output_dir)
-#     logger.info(f"Tokenizer saved to {training_args.output_dir}")
-
-#     # Save everything else on main process
-#     if trainer.accelerator.is_main_process:
-#         trainer.create_model_card({"tags": ["rl","grpo", "tutorial", "philschmid"]})
-#     # push to hub if needed
-#     if training_args.push_to_hub is True:
-#         logger.info("Pushing to hub...")
-#         trainer.push_to_hub()
 
 #     logger.info("*** Training complete! ***")
 
@@ -237,38 +222,65 @@ def train(
     if last_checkpoint is not None and training_args.resume_from_checkpoint is None:
         logger.info(f"Checkpoint detected, resuming training at {last_checkpoint}.")
 
+    
     dataset = get_dataset(name=script_args.dataset_id_or_path, tokenizer=tokenizer)
     # dataset = dataset.filter(lambda example: example['label'] == 'association')
 
-    split_dataset = dataset.train_test_split(test_size=0.1)
+    # split_dataset = dataset.train_test_split(test_size=0.1)
 
     train_dataset, test_dataset = split_dataset['train'], split_dataset['test']
 
     rewards_fn = get_reward(name=script_args.dataset_id_or_path)
 
+    training_args.save_total_limit = 1
+
     trainer = GRPOTrainer(
         model=model_args.model_name_or_path,
         reward_funcs=rewards_fn,
         args=training_args,
-        train_dataset=train_dataset,
-        eval_dataset=test_dataset,
+        train_dataset=dataset,
+        eval_dataset=dataset,
         peft_config=get_peft_config(model_args),
         callbacks=[PrinterCallback()]
     )
 
     print("LoRA Config:", get_peft_config(model_args))
 
-    # if last_checkpoint is not None:
-        # train_result = trainer.train(resume_from_checkpoint=last_checkpoint)
+    if last_checkpoint is not None:
+        train_result = trainer.train(resume_from_checkpoint=last_checkpoint)
 
-    # else:
-    train_result = trainer.train()
+    else:
+        train_result = trainer.train()
+
+        eval_res = trainer.evaluate()
+
+        print(eval_res)
 
     metrics = train_result.metrics
     metrics["train_samples"] = len(train_dataset)
     trainer.log_metrics("train", metrics)
     trainer.save_metrics("train", metrics)
     trainer.save_state()
+
+    logger.info("*** Save model ***")
+    trainer.model.config.use_cache = True
+    trainer.save_model(training_args.output_dir)
+    logger.info(f"Model saved to {training_args.output_dir}")
+    training_args.distributed_state.wait_for_everyone()  # wait for all processes to load
+
+    tokenizer.save_pretrained(training_args.output_dir)
+    logger.info(f"Tokenizer saved to {training_args.output_dir}")
+
+    # Save everything else on main process
+    if trainer.accelerator.is_main_process:
+        trainer.create_model_card({"tags": ["rl","grpo", "tutorial", "philschmid"]})
+
+        # push to hub if needed
+    if training_args.push_to_hub is True:
+        logger.info("Pushing to hub...")
+        trainer.push_to_hub()
+
+ 
 
 
 def main():

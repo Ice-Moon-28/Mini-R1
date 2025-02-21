@@ -1,0 +1,11 @@
+随机种子已设置为: 3047
+> /root/Mini-R1/eval/eval_pipeline.py(42)evaluate()
+-> model = model.cuda()
+(Pdb) --KeyboardInterrupt--
+(Pdb) --KeyboardInterrupt--
+(Pdb) --KeyboardInterrupt--
+(Pdb) --KeyboardInterrupt--
+(Pdb) --KeyboardInterrupt--
+(Pdb) --KeyboardInterrupt--
+(Pdb) --KeyboardInterrupt--
+(Pdb) 
