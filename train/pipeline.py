@@ -34,7 +34,6 @@ wandb.login(key=wb_token)
 
 import os
 
-# os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
 cache_dir = '/root/autodl-tmp/minir1'
 
 
@@ -228,7 +227,7 @@ def train(
 
     # split_dataset = dataset.train_test_split(test_size=0.1)
 
-    train_dataset, test_dataset = split_dataset['train'], split_dataset['test']
+    # train_dataset, test_dataset = split_dataset['train'], split_dataset['test']
 
     rewards_fn = get_reward(name=script_args.dataset_id_or_path)
 
@@ -244,6 +243,14 @@ def train(
         callbacks=[PrinterCallback()]
     )
 
+    trainer.save_state()
+
+    logger.info("*** Save model ***")
+    trainer.model.config.use_cache = True
+    trainer.save_model(training_args.output_dir)
+
+    import pdb; pdb.set_trace()
+
     print("LoRA Config:", get_peft_config(model_args))
 
     if last_checkpoint is not None:
@@ -257,7 +264,7 @@ def train(
         print(eval_res)
 
     metrics = train_result.metrics
-    metrics["train_samples"] = len(train_dataset)
+    metrics["train_samples"] = len(dataset)
     trainer.log_metrics("train", metrics)
     trainer.save_metrics("train", metrics)
     trainer.save_state()

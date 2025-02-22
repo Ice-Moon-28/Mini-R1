@@ -15,15 +15,15 @@ files = [
 
 [[package]]
 name = "accelerate"
-version = "1.3.0"
+version = "1.2.0"
 description = "Accelerate"
 optional = false
 python-versions = ">=3.9.0"
 groups = ["main"]
 markers = "python_version <= \"3.11\" or python_version >= \"3.12\""
 files = [
-    {file = "accelerate-1.3.0-py3-none-any.whl", hash = "sha256:5788d9e6a7a9f80fed665cf09681c4dddd9dc056bea656db4140ffc285ce423e"},
-    {file = "accelerate-1.3.0.tar.gz", hash = "sha256:518631c0adb80bd3d42fb29e7e2dc2256bcd7c786b0ba9119bbaa08611b36d9c"},
+    {file = "accelerate-1.2.0-py3-none-any.whl", hash = "sha256:815708367eb83cd682e120da634b2cf318729bff95f30e2f046c086aae20201e"},
+    {file = "accelerate-1.2.0.tar.gz", hash = "sha256:4187a9dea21101255ada3a1974532585feeb6ca8b681693dba362d6d25e85ef2"},
 ]
 
 [package.dependencies]
@@ -33,7 +33,7 @@ packaging = ">=20.0"
 psutil = "*"
 pyyaml = "*"
 safetensors = ">=0.4.3"
-torch = ">=2.0.0"
+torch = ">=1.10.0"
 
 [package.extras]
 deepspeed = ["deepspeed"]
@@ -5750,4 +5750,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "<4.0, >=3.9"
-content-hash = "094edc1e2ebb0ea871c3b74ae51b7c2f81e82e64a337109241d134559f5db127"
+content-hash = "9137ab7b9d772aa07bd5e87899ee01bb31f3bc2249da3c9a8753cc4be5bdea36"
