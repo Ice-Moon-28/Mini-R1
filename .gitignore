@@ -1,0 +1,13 @@
+wandb/**
+
+# 忽略所有 .pyc 文件
+**.pyc
+
+# 忽略所有 __pycache__ 目录
+**/__pycache__/**
+
+settings.py
+
+qwen-r1-aha-moment/**
+
+runs/**
