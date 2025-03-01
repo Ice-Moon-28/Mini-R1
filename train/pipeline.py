@@ -28,6 +28,7 @@ handler.setFormatter(
 )
 logger.addHandler(handler)
 
+
 # # Defined in the secrets tab in Google Colab
 login(token=hf_token, add_to_git_credential=True)
 wandb.login(key=wb_token)
@@ -226,7 +227,7 @@ def train(
     dataset = get_dataset(name=script_args.dataset_id_or_path, tokenizer=tokenizer)
     # dataset = dataset.filter(lambda example: example['label'] == 'association')
 
-    # split_dataset = dataset.train_test_split(test_size=0.1)
+    split_dataset = dataset.train_test_split(test_size=0.01)
 
     train_dataset, test_dataset = split_dataset['train'], split_dataset['test']
 
@@ -238,7 +239,7 @@ def train(
         model=model_args.model_name_or_path,
         reward_funcs=rewards_fn,
         args=training_args,
-        train_dataset=dataset,
+        train_dataset=test_dataset,
         eval_dataset=dataset,
         peft_config=get_peft_config(model_args),
         callbacks=[PrinterCallback()]
@@ -250,6 +251,8 @@ def train(
         train_result = trainer.train(resume_from_checkpoint=last_checkpoint)
 
     else:
+        eval_res = trainer.evaluate()
+
         train_result = trainer.train()
 
         eval_res = trainer.evaluate()
