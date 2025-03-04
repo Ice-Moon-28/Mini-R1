@@ -251,13 +251,7 @@ def train(
         train_result = trainer.train(resume_from_checkpoint=last_checkpoint)
 
     else:
-        eval_res = trainer.evaluate()
-
         train_result = trainer.train()
-
-        eval_res = trainer.evaluate()
-
-        print(eval_res)
 
     metrics = train_result.metrics
     metrics["train_samples"] = len(train_dataset)

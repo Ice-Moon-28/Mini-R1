@@ -92,6 +92,13 @@ def equation_reward_func(completions, target, **kwargs):
         # Check if the equation is correct and matches the ground truth
         if abs(float(result) - float(gt)) < 1e-5:
             rewards.append(2.0)
+
+            with open('countdown_accuracy', "a+", encoding="utf-8") as f:
+                for i in range(len(completions)):
+                    f.write("-" * 60 + "\n")
+                    f.write(f"🤖 Output: {completion}\n")
+                    f.write(f"🎯 Target: {gt}\n")  
+                    f.write("-" * 60 + "\n")
         else:
             rewards.append(0.0)
       except Exception:
