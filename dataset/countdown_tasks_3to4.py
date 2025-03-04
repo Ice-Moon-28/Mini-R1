@@ -2,6 +2,7 @@ from dataset.guess_word import GuessWordDataset
 from transformers import AutoTokenizer
 from datasets import load_dataset
 import os
+import torch
  
 def get_countdown_dataset(tokenizer):
     dataset = load_dataset("parquet", data_files="dataset/countdown.parquet", split="train")
@@ -19,9 +20,32 @@ def get_countdown_dataset(tokenizer):
             "role": "assistant",
             "content": "Let me solve this step by step.\n<think>"
         }]
-        return {"prompt": tokenizer.apply_chat_template(r1_prefix, tokenize=False, continue_final_message=True), "target": target}
+        return {
+            "prompt": tokenizer.apply_chat_template(r1_prefix, tokenize=False, continue_final_message=True),
+            "target": target,
+            "nums": numbers,
+        }
 
     dataset = dataset.map(lambda x: generate_r1_prompt(x["nums"], x["target"]))
 
     return dataset
 
+
+
+def get_countdown_collate_fn(batch, tokenizer):
+  
+    prompts = [item['prompt'] for item in batch]
+    targets = [item['target'] for item in batch]
+    nums = [item['nums'] for item in batch]
+
+    inputs = tokenizer(prompts, padding=True, truncation=True, return_tensors="pt")
+
+    return {
+        "prompts": {
+            "input_ids": inputs["input_ids"],
+            "attention_mask": inputs["attention_mask"],
+        },
+        "target": targets,
+        "input": prompts,
+        "nums": nums,
+    }

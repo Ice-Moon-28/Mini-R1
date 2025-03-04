@@ -31,15 +31,13 @@ def format_reward_func(completions, target, **kwargs):
                 if len(answer_matches) == 1:
                     rewards.append(1.0)
                 else:
-                    rewards.append(0.5)
+                    rewards.append(0.0)
         except Exception:
             rewards.append(0.0)
 
-    print(rewards)
-
     return rewards
  
-def equation_reward_func(completions, target, nums, **kwargs):
+def equation_reward_func(completions, target, **kwargs):
     """
     Evaluates completions based on:
     2. Mathematical correctness of the answer
@@ -52,7 +50,13 @@ def equation_reward_func(completions, target, nums, **kwargs):
     Returns:
         list[float]: Reward scores
     """
+
+    nums = kwargs["nums"]
+
+    assert nums != None
+
     rewards = []
+
     for completion, gt, numbers in zip(completions, target, nums):
       try:
         # add synthetic <think> as its already part of the prompt and prefilled for the assistant to more easily match the regex
@@ -64,6 +68,12 @@ def equation_reward_func(completions, target, nums, **kwargs):
             continue
         # Extract the "answer" part from the completion
         equation = match.group(1).strip()
+
+
+        # 取左边
+        if '=' in equation:
+            equation = equation.split('=')[0].strip()
+
         # Extract all numbers from the equation
         used_numbers = [int(n) for n in re.findall(r'\d+', equation)]
         
@@ -99,6 +109,10 @@ if __name__ == "__main__":
     correct_sample_3 = """ ... </think><think></think><answer> 55 + 36 - 7 - 19 </answer>"""
 
     correct_sample_4 = """ ... </think><answer> 55 + 36 - 7 - 19 </answer><answer> 55 + 36 - 7 - 19 </answer>"""
+
+    correct_sample_5 = """ ... </think><think></think><answer> 55 + 36 - 7 - 19 = 65 </answer>"""
+
+    wrong_sample_5 = """ ... </think><think></think><answer> 55 + 36 - 7 + 19 = 65 </answer>"""
     
     wrong_format = """User: Using the numbers [19, 36, 55, 7], create an equation that equals 65."""
     
@@ -113,5 +127,5 @@ if __name__ == "__main__":
     
     test_rewards = format_reward_func(completions=[correct_sample_1, correct_sample_2, wrong_format, wrong_format_2, wrong_result, correct_sample_3, correct_sample_4], target=["65", "65", "65", "65", "65"], nums=[[19, 36, 55, 7]] * 5)
     assert test_rewards == [1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.5], "Reward function is not working"
-    test_rewards = equation_reward_func(completions=[correct_sample_1, correct_sample_2, wrong_format, wrong_format_2, wrong_result], target=["65", "65", "65", "65", "65"], nums=[[19, 36, 55, 7]] * 5)
-    assert test_rewards == [2.0, 2.0, 0.0, 0.0, 0.0], "Reward function is not working"
+    test_rewards = equation_reward_func(completions=[correct_sample_1, correct_sample_2, wrong_format, wrong_format_2, wrong_result, correct_sample_5, wrong_sample_5], target=["65", "65", "65", "65", "65", "65", "65"], nums=[[19, 36, 55, 7]] * 7)
+    assert test_rewards == [2.0, 2.0, 0.0, 0.0, 0.0, 2.0, 0.0], "Reward function is not working"

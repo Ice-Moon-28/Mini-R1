@@ -1,5 +1,5 @@
 import os
-from dataset.get_dataset import get_collect_fn, get_dataset
+from dataset.get_dataset import get_collect_fn, get_dataset, get_kwargs_from_batch
 from model.get_model import get_model
 from reward.get_reward import get_reward
 from transformers import AutoTokenizer, AutoModelForCausalLM
@@ -37,16 +37,17 @@ def evaluate(model_name, dataset_name, load_from_checkpoint=True):
             },
         )
 
-    import pdb; pdb.set_trace()
-    
     model = model.cuda()
     model.eval()
 
     dataset = get_dataset(name=dataset_name, tokenizer=tokenizer)
 
+    if len(dataset) > 10000:
+        dataset =  dataset.shuffle(seed=42).select(range(10000))
+
     collect_fn = get_collect_fn(name=dataset_name, tokenizer=tokenizer)
 
-    dataloader = DataLoader(dataset, batch_size=128, shuffle=False, collate_fn=collect_fn)
+    dataloader = DataLoader(dataset, batch_size=64, shuffle=False, collate_fn=collect_fn)
 
     reward_fns = get_reward(name=dataset_name)
 
@@ -73,7 +74,9 @@ def evaluate(model_name, dataset_name, load_from_checkpoint=True):
 
         prediction = tokenizer.batch_decode(pure_completions, skip_special_tokens=True)
 
-        reward_scores = [fn(prediction, target) for fn in reward_fns]
+        kwargs = get_kwargs_from_batch(name=dataset_name)(batch)
+
+        reward_scores = [fn(prediction, target, **kwargs) for fn in reward_fns]
 
         rewards.extend(reward_scores)
         
@@ -101,8 +104,8 @@ def main():
 
     set_seed(seed=3047)
     # 参数配置
-    model_name = "Qwen/Qwen2.5-7B"
-    dataset_name = "guessing"
+    model_name = "Qwen/Qwen2.5-7B-Instruct"
+    dataset_name = "countdown"
 
     # 调用评估函数
-    evaluate(model_name, dataset_name, True)
+    evaluate(model_name, dataset_name, False)
