@@ -1,4 +1,5 @@
 from dataset.countdown_tasks_3to4 import get_countdown_collate_fn, get_countdown_dataset
+from dataset.gmsk8 import get_gsm8k_collate_fn, get_gsm8k_dataset
 from dataset.guess_word import get_guess_word_dataset, guess_word_collate_fn
 
 def get_dataset(
@@ -10,7 +11,7 @@ def get_dataset(
     elif name == 'guessing':
         return get_guess_word_dataset(tokenizer=tokenizer)
     else:
-        return None
+        return get_gsm8k_dataset(tokenizer=tokenizer)
 
 def get_collect_fn(
         name="",
@@ -20,8 +21,8 @@ def get_collect_fn(
         return lambda x: get_countdown_collate_fn(batch=x, tokenizer=tokenizer)
     elif name == 'guessing':
         return lambda x: guess_word_collate_fn(batch=x, tokenizer=tokenizer)
-    else:
-        return None
+    elif name == 'gsm8k':
+        return lambda x: get_gsm8k_collate_fn(batch=x, tokenizer=tokenizer)
 
 def get_kwargs_from_batch(
         name="",
@@ -30,5 +31,5 @@ def get_kwargs_from_batch(
         return lambda x: {"nums": x['nums']}
     elif name == 'guessing':
         return lambda x: {}
-    else:
+    elif name == 'gsm8k':
         return lambda x: {}

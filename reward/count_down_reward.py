@@ -1,5 +1,57 @@
+import math
 import re
  
+
+def length_reward_enhancement(completion, base_reward=2, min_length=0, max_length=1000):
+    """
+    Calculate a reward based on the length of the completion using a cosine function.
+    
+    Parameters:
+    - completion: The text to evaluate
+    - min_length: Minimum desired length (default 200)
+    - max_length: Maximum desired length (default 800)
+    
+    Returns:
+    - A reward value between 2.0 and 4.0
+    """
+    length = len(completion)
+    
+    # If length is outside the desired range, use a base reward
+    if length < min_length:
+        return 0
+    
+    # Normalize the length to a 0 to π range
+    normalized_length = (min((length - min_length) / (max_length - min_length), 1)) * math.pi
+
+    # Use cosine to create a smooth reward curve
+    # cos starts at -1 when x=0, goes to 1 when x=π
+    # We transform this to go from 2.0 to 4.0
+    reward = base_reward + math.cos(normalized_length - math.pi) * base_reward
+
+    return reward
+
+def has_repetition(text, min_len=50, max_repeats=3):
+    """
+    Check if the text contains consecutive repeating substrings or phrases.
+    
+    Args:
+        text (str): The string to check.
+        min_len (int): Minimum length of the substring to check for repetition.
+        max_repeats (int): Maximum number of repeats allowed for any substring.
+    
+    Returns:
+        bool: True if there is repetition, False otherwise.
+    """
+    # Check for repeating substrings of length >= min_len
+    for length in range(min_len, len(text) // 2 + 1):
+        for i in range(len(text) - length):
+            substring = text[i:i + length]
+            repeats = text.count(substring)
+            if repeats > max_repeats:
+                return True
+    return False
+
+
 def format_reward_func(completions, target, **kwargs):
     """
     Format: <think>...</think><answer>...</answer>
@@ -91,7 +143,28 @@ def equation_reward_func(completions, target, **kwargs):
         result = eval(equation, {"__builtins__": None}, {})
         # Check if the equation is correct and matches the ground truth
         if abs(float(result) - float(gt)) < 1e-5:
-            rewards.append(2.0)
+
+            think_process = re.search(f"<think>([^<]*(?:<(?!/?think>)[^<]*)*)</think>", completion)
+
+
+            # if len(completion) > 400:
+                # Check for consecutive repeated substrings or "robot-like" responses
+            if (len(think_process.groups()) == 1) and not has_repetition(think_process[0]):
+
+                
+                rewards.append(
+                    2.0 + length_reward_enhancement(
+                        completion=think_process[0],
+                        base_reward=1,
+                        min_length=0,
+                        max_length=800,
+                    )
+                )
+            else:
+                rewards.append(2.0)
+            # else:
+            #     rewards.append(2.0)
+
 
             with open('countdown_accuracy', "a+", encoding="utf-8") as f:
                 for i in range(len(completions)):
@@ -119,6 +192,13 @@ if __name__ == "__main__":
 
     correct_sample_5 = """ ... </think><think></think><answer> 55 + 36 - 7 - 19 = 65 </answer>"""
 
+    correct_sample_6 = """I need to combine the numbers 77, 33, 78, and 86 with basic arithmetic to get the answer 52. One possible way to do this is to use subtraction and addition. I can subtract 33 from 77 to get 44, and then add 78 to get 122. However, this is too high. So, I can subtract 78 from 86 to get 8, and then add 44 to get 52.  I need to create an equation using the given numbers that equals 98. I'll start by looking at the largest number, 59, and see if I can find a way to use it in the equation. Then I'll move on to the other numbers. First, I'll start by adding the two smallest numbers, which are 56 and 83. Then, I'll subtract the result from the largest number, which is 90.</think><answer> 55 + 36 - 7 - 19 = 65 </answer>"""
+
+    correct_sample_7 = """ to find an equation using the numbers 19, 36, 55, and 7 exactly once, with basic arithmetic operations, that equals 65. One possible combination is 55 + 36 - 19  to find an equation using the numbers 19, 36, 55, and 7 exactly once, with basic arithmetic operations, that equals 65. One possible combination is 55 + 36 - 19  to find an equation using the numbers 19, 36, 55, and 7 exactly once, with basic arithmetic operations, that equals 65. One possible combination is 55 + 36 - 19  to find an equation using the numbers 19, 36, 55, and 7 exactly once, with basic arithmetic operations, that equals 65. One possible combination is 55 + 36 - 19  to find an equation using the numbers 19, 36, 55, and 7 exactly once, with basic arithmetic operations, that equals 65. One possible combination is 55 + 36 - 19 </think><answer> 55 + 36 - 7 - 19 </answer>"""
+
+    correct_sample_8 =  """ I need t12121212cvbshaunsjckxnsajcnacjnsaocnasokjcnbasobsjfbsjkdbsajcbasdijbcqo combine the numbers 77, 33, 78, and 86 with b12121291212 9121 I need to combine the numbers 77, 33, 78, and 86 with basic arithmetic to get the answer 52. One possible way to do this is to use subtraction and addition. I can subtract 33 from 77 to get 44, and then add 78 to get 122. However, this is too high. So, I can subtract 78 from 86 to get 8, and then add 44 to get 52.  I need to create an equation using the given numbers that equals 98. I'll start by looking at the largest number, 59, and see if I can find a way to use it in the equation. Then I'll move on to the other numbers. First, I'll start by adding the two smallest numbers, which are 56 and 83. Then, I'll subtract the result from the largest number, which is 90.</think><answer> 55 + 36 - 7 - 19 = 65 </answer>"""
+
+
     wrong_sample_5 = """ ... </think><think></think><answer> 55 + 36 - 7 + 19 = 65 </answer>"""
     
     wrong_format = """User: Using the numbers [19, 36, 55, 7], create an equation that equals 65."""
@@ -130,9 +210,11 @@ if __name__ == "__main__":
     <think> 183 - 104 = 79 </think><think> 183 - 104 = 79 </think><answer> 183 - 104 = 79 </answer>"""
     
     wrong_result = """ ... </think><answer> 55 + 36 - 7 - 18 </answer>"""
-    
-    
+
     test_rewards = format_reward_func(completions=[correct_sample_1, correct_sample_2, wrong_format, wrong_format_2, wrong_result, correct_sample_3, correct_sample_4], target=["65", "65", "65", "65", "65"], nums=[[19, 36, 55, 7]] * 5)
-    assert test_rewards == [1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.5], "Reward function is not working"
-    test_rewards = equation_reward_func(completions=[correct_sample_1, correct_sample_2, wrong_format, wrong_format_2, wrong_result, correct_sample_5, wrong_sample_5], target=["65", "65", "65", "65", "65", "65", "65"], nums=[[19, 36, 55, 7]] * 7)
-    assert test_rewards == [2.0, 2.0, 0.0, 0.0, 0.0, 2.0, 0.0], "Reward function is not working"
+    print(test_rewards)
+    assert test_rewards == [1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0], "Reward function is not working"
+    test_rewards = equation_reward_func(completions=[correct_sample_1, correct_sample_2, correct_sample_6, correct_sample_7, correct_sample_8, wrong_format, wrong_format_2, wrong_result, correct_sample_5, wrong_sample_5], target=["65"] * 10, nums=[[19, 36, 55, 7]] * 10)
+    print(test_rewards)
+    assert test_rewards == [2.536697580176151, 2.006165332533744, 5.809654104932039, 2.0, 6.0, 0.0, 0.0, 0.0, 2.006165332533744, 0.0], "Reward function is not working"
+

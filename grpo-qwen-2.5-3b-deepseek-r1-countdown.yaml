@@ -5,11 +5,11 @@ torch_dtype: bfloat16
 attn_implementation: flash_attention_2
 bf16: true
 tf32: true
-output_dir: /root/autodl-tmp/runs
+output_dir: /root/autodl-tmp/gsm8k
 
 # Dataset arguments
-dataset_id_or_path: 'countdown'
-dataset_name: 'countdown'
+dataset_id_or_path: 'gsm8k'
+dataset_name: 'gsm8k'
 
 # Lora Arguments
 # No LoRA is used here
@@ -26,7 +26,7 @@ learning_rate: 5.0e-7 # 1.0e-6 as in the deepseek math paper 5-e7 from https://h
 lr_scheduler_type: cosine
 warmup_ratio: 0.08
 # GRPO specific parameters
-beta: 0.005 # 0.04 as in the deepseek math paper 0.001 from https://hijkzzz.notion.site/unraveling-rlhf-and-its-variants-engineering-insights#147d9a33ecc9806090f3d5c749d31f05
+beta: 0.002 # 0.04 as in the deepseek math paper 0.001 from https://hijkzzz.notion.site/unraveling-rlhf-and-its-variants-engineering-insights#147d9a33ecc9806090f3d5c749d31f05
 max_prompt_length: 256
 max_completion_length: 1024
 num_generations: 24
