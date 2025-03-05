@@ -26,16 +26,16 @@ def evaluate(model_name, dataset_name, load_from_checkpoint=True):
     os.environ["HF_HOME"] = cache_dir
 
     if load_from_checkpoint:
-        checkpoint_path = "/root/autodl-tmp/runs/checkpoint-550"
+        checkpoint_path = "../model/runs"
         model = AutoModelForCausalLM.from_pretrained(checkpoint_path)
         tokenizer = AutoTokenizer.from_pretrained(checkpoint_path)
-    else:
-        model, tokenizer = get_model(
-            model_name=model_name,
-            model_config={
-                "torch_dtype": torch.bfloat16,
-            },
-        )
+    # else:
+    #     model, tokenizer = get_model(
+    #         model_name=model_name,
+    #         model_config={
+    #             "torch_dtype": torch.bfloat16,
+    #         },
+    #     )
 
     model = model.cuda()
     model.eval()
@@ -66,7 +66,13 @@ def evaluate(model_name, dataset_name, load_from_checkpoint=True):
 
         # Tokenize and generate prediction
         with torch.no_grad():
-            output = model.generate(**prompt, max_new_tokens=768)
+            output = model.generate(
+                **prompt,
+                top_k=50,  # Limits sampling to the k most likely next tokens
+                temperature=0.7, 
+                max_new_tokens=768,
+                do_sample=True,
+            )
 
         total_output = tokenizer.batch_decode(output, skip_special_tokens=True)
         
@@ -108,4 +114,4 @@ def main():
     dataset_name = "countdown"
 
     # 调用评估函数
-    evaluate(model_name, dataset_name, False)
+    evaluate(model_name, dataset_name, True)
