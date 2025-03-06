@@ -61,6 +61,7 @@ def get_gsm8k_collate_fn(batch, tokenizer):
         },
         "target": targets,
         "questions": questions,
+        "input": prompts,
     }
 
 if __name__ == '__main__':

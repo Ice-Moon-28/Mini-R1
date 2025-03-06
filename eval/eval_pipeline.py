@@ -29,13 +29,13 @@ def evaluate(model_name, dataset_name, load_from_checkpoint=True):
         checkpoint_path = "../model/runs"
         model = AutoModelForCausalLM.from_pretrained(checkpoint_path)
         tokenizer = AutoTokenizer.from_pretrained(checkpoint_path)
-    # else:
-    #     model, tokenizer = get_model(
-    #         model_name=model_name,
-    #         model_config={
-    #             "torch_dtype": torch.bfloat16,
-    #         },
-    #     )
+    else:
+        model, tokenizer = get_model(
+            model_name=model_name,
+            model_config={
+                "torch_dtype": torch.bfloat16,
+            },
+        )
 
     model = model.cuda()
     model.eval()
@@ -111,7 +111,8 @@ def main():
     set_seed(seed=3047)
     # 参数配置
     model_name = "Qwen/Qwen2.5-7B-Instruct"
-    dataset_name = "countdown"
+    # model_name = "Qwen/Qwen2.5-3B-Instruct"
+    dataset_name = "gsm8k"
 
     # 调用评估函数
-    evaluate(model_name, dataset_name, True)
+    evaluate(model_name, dataset_name, False)
