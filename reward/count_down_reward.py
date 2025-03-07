@@ -21,12 +21,12 @@ def length_reward_enhancement(completion, base_reward=2, min_length=0, max_lengt
         return 0
     
     # Normalize the length to a 0 to π range
-    normalized_length = (min((length - min_length) / (max_length - min_length), 1)) * math.pi
+    normalized_length = (min((length - min_length) / (max_length - min_length), 1))
 
     # Use cosine to create a smooth reward curve
     # cos starts at -1 when x=0, goes to 1 when x=π
     # We transform this to go from 2.0 to 4.0
-    reward = base_reward + math.cos(normalized_length - math.pi) * base_reward
+    reward = (normalized_length * base_reward)
 
     return reward
 
@@ -81,7 +81,19 @@ def format_reward_func(completions, target, **kwargs):
                 answer_matches = re.findall(answer_pattern, completion, re.DOTALL)
 
                 if len(answer_matches) == 1:
-                    rewards.append(1.0)
+                    think_process = re.search(f"<think>([^<]*(?:<(?!/?think>)[^<]*)*)</think>", completion)
+                    if (len(think_process.groups()) == 1) and not has_repetition(think_process[0]):
+                        print(len(think_process[0]))
+                        rewards.append(
+                            1.0 + length_reward_enhancement(
+                                completion=think_process[0],
+                                base_reward=1.5,
+                                min_length=0,
+                                max_length=1500,
+                            )
+                        )
+                    else:
+                        rewards.append(1.0)
                 else:
                     rewards.append(0.0)
         except Exception:
@@ -144,24 +156,24 @@ def equation_reward_func(completions, target, **kwargs):
         # Check if the equation is correct and matches the ground truth
         if abs(float(result) - float(gt)) < 1e-5:
 
-            think_process = re.search(f"<think>([^<]*(?:<(?!/?think>)[^<]*)*)</think>", completion)
+            # think_process = re.search(f"<think>([^<]*(?:<(?!/?think>)[^<]*)*)</think>", completion)
 
 
-            # if len(completion) > 400:
-                # Check for consecutive repeated substrings or "robot-like" responses
-            if (len(think_process.groups()) == 1) and not has_repetition(think_process[0]):
+            # # if len(completion) > 400:
+            #     # Check for consecutive repeated substrings or "robot-like" responses
+            # if (len(think_process.groups()) == 1) and not has_repetition(think_process[0]):
 
                 
-                rewards.append(
-                    2.0 + length_reward_enhancement(
-                        completion=think_process[0],
-                        base_reward=1,
-                        min_length=0,
-                        max_length=800,
-                    )
-                )
-            else:
-                rewards.append(2.0)
+            #     rewards.append(
+            #         2.0 + length_reward_enhancement(
+            #             completion=think_process[0],
+            #             base_reward=1,
+            #             min_length=0,
+            #             max_length=800,
+            #         )
+            #     )
+            # else:
+            rewards.append(2.0)
             # else:
             #     rewards.append(2.0)
 
