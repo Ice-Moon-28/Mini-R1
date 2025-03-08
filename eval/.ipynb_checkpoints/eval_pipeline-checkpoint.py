@@ -26,16 +26,16 @@ def evaluate(model_name, dataset_name, load_from_checkpoint=True):
     os.environ["HF_HOME"] = cache_dir
 
     if load_from_checkpoint:
-        checkpoint_path = "../model/runs"
+        checkpoint_path = "icemoon28/Qwen-3b-RL"
         model = AutoModelForCausalLM.from_pretrained(checkpoint_path)
         tokenizer = AutoTokenizer.from_pretrained(checkpoint_path)
-    # else:
-    #     model, tokenizer = get_model(
-    #         model_name=model_name,
-    #         model_config={
-    #             "torch_dtype": torch.bfloat16,
-    #         },
-    #     )
+    else:
+        model, tokenizer = get_model(
+            model_name=model_name,
+            model_config={
+                "torch_dtype": torch.bfloat16,
+            },
+        )
 
     model = model.cuda()
     model.eval()
@@ -43,7 +43,7 @@ def evaluate(model_name, dataset_name, load_from_checkpoint=True):
     dataset = get_dataset(name=dataset_name, tokenizer=tokenizer)
 
     if len(dataset) > 10000:
-        dataset =  dataset.shuffle(seed=42).select(range(10000))
+        dataset =  dataset.shuffle(seed=3047).select(range(10000))
 
     collect_fn = get_collect_fn(name=dataset_name, tokenizer=tokenizer)
 
@@ -110,7 +110,8 @@ def main():
 
     set_seed(seed=3047)
     # 参数配置
-    model_name = "Qwen/Qwen2.5-7B-Instruct"
+    model_name = "icemoon28/Qwen-3b-RL"
+    # model_name = "Qwen/Qwen2.5-3B-Instruct"
     dataset_name = "countdown"
 
     # 调用评估函数
