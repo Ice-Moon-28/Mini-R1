@@ -1,21 +1,28 @@
-from transformers import AutoModelForCausalLM, AutoTokenizer
-from huggingface_hub import HfApi, Repository
+import json
+import random
 
-# Hugging Face Hub repo 名称（替换为你想要的）
-repo_name = "icemoon28/qwen2.5-3b-finetuned"
+# 读取 JSON 数据
+with open("dataset/output.json", "r", encoding="utf-8") as f:
+    data = json.load(f)
 
-# Hugging Face Hub 访问路径
-repo_url = f"https://huggingface.co/{repo_name}"
+# 设置随机种子，保证可复现
+random.seed(42)
 
-# 你的 checkpoint 目录
-checkpoint_path = "/root/autodl-tmp/runs/checkpoint-550"
+# 随机打乱数据
+random.shuffle(data)
 
-# 加载模型 & tokenizer
-model = AutoModelForCausalLM.from_pretrained(checkpoint_path)
-tokenizer = AutoTokenizer.from_pretrained(checkpoint_path)
+# 计算划分索引
+split_index = int(0.8 * len(data))  # 80% 训练集，20% 测试集
 
-# 推送到 Hugging Face Hub
-model.push_to_hub(repo_name, max_shard_size="2GB")
-tokenizer.push_to_hub(repo_name)
+# 划分数据
+train_data = data[:split_index]
+test_data = data[split_index:]
 
-print(f"🚀 模型已上传至 {repo_url}")
+# 保存数据
+with open("train.json", "w", encoding="utf-8") as f:
+    json.dump(train_data, f, ensure_ascii=False, indent=4)
+
+with open("test.json", "w", encoding="utf-8") as f:
+    json.dump(test_data, f, ensure_ascii=False, indent=4)
+
+print(f"训练集大小: {len(train_data)}, 测试集大小: {len(test_data)}")

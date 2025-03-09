@@ -3,6 +3,8 @@ import re
 
 import numpy as np
 
+from reward.reward import has_repetition, length_reward_enhancement
+
 def format_reward_func(completions, target, **kwargs):
     """
     Format: <think>...</think><answer>...</answer>
@@ -25,6 +27,7 @@ def format_reward_func(completions, target, **kwargs):
             regex = r"^<think>([^<]*(?:<(?!/?think>)[^<]*)*)<\/think>[\s]*<answer>([\s\S]*?)<\/answer>$"
     
             match = re.search(regex, completion, re.DOTALL) 
+
             # if the format is not correct, reward is 0
             if match is None or len(match.groups()) != 2:
                 # think_pattern = r"<think>([\s\S]*?)<\/think>"
@@ -39,27 +42,30 @@ def format_reward_func(completions, target, **kwargs):
                 # else:
                 rewards.append(0.0)
             else:
-                # ideal_length = 500  
-                # tolerance = 200 
-                # length = len(completion)
-                # normalized_offset = abs(length - ideal_length) / tolerance 
-
                 answer_pattern = r"<answer>([\s\S]*?)<\/answer>"
 
+                answer_match = re.findall(answer_pattern, completion, re.DOTALL)
 
-                answer_match = re.search(answer_pattern, completion, re.DOTALL)
+                if len(answer_match) == 1:
+                    think_process = re.search(f"<think>([^<]*(?:<(?!/?think>)[^<]*)*)</think>", completion)
 
-                if len(think_matches) == 1 and len(answer_matches) == 1:
-                    rewards.append(1.0)
+                    if (len(think_process.groups()) == 1) and not has_repetition(think_process[0], min_len=25, max_repeats=3):
+                        rewards.append(
+                            1.0 + length_reward_enhancement(
+                                completion=think_process[0],
+                                base_reward=2.0,
+                                min_length=0,
+                                max_length=400,
+                            )
+                        )
+                    else:
+                        rewards.append(1.0)
                 else:
-                    rewards.append(0.5)
-                # else:
-                    # rewards.append((np.cos(np.pi * normalized_offset) + 1) / 2 + 1.0) 
+                    rewards.append(0.0)
 
-        except Exception:
+        except Exception as e:
+            print(e)
             rewards.append(0.0)
-
-    print(rewards)
 
     with open('format', "a+", encoding="utf-8") as f:
         for i in range(len(completions)):
@@ -118,7 +124,7 @@ def guess_word_reward_func(completions, target, **kwargs):
                     if match_found:
                         rewards.append(2.0 if len(gt) == len(answer) else 1.5)
                         matched = True
-                        with open("true_answer_3b.txt", "a") as f:
+                        with open("true_answer_3b.txt", "a+", encoding="utf-8") as f:
                             f.write(f"Completion: {completion}\nTarget: {gt}\n\n")
                         break
 
@@ -168,7 +174,7 @@ def length_reward_func(completions, target, **kwargs):
 
 
 if __name__ == "__main__":
-    correct_completion = """手游兴盛，叠词，通常用于描述事物蓬勃发展，答案应是‘蒸蒸日上’。</think>
+    correct_completion = """手游兴盛，叠词，通常用于描述事物蓬勃发展，答案应是‘蒸蒸日上’。手游兴盛，叠词，通常用于描述事物蓬勃发展，答案应是‘蒸蒸日上’。手游兴盛，叠词，通常用于描述事物蓬勃发展，答案应是‘蒸蒸日上’。手游兴盛，叠词，通常用于描述事物蓬勃发展，答案应是‘蒸蒸日上’。手游兴盛，叠词，通常用于描述事物蓬勃发展，答案应是‘蒸蒸日上’。</think>
     <answer>蒸蒸日上</answer>"""
 
     correct_completion2 = """描述受人敬仰的成语，含有地名和星宿名。泰山和北斗均为具有代表性的元素，答案是‘泰山北斗’。</think>
@@ -206,12 +212,12 @@ if __name__ == "__main__":
     )
 
     test_reward_format = format_reward_func(
-        completions=[correct_completion, correct_completion2, correct_completion3, correct_completion, correct_completion2, correct_completion3, missing_answer, wrong_answer, missing_think],
-        target=["蒸蒸日上", "泰山北斗", "星期五", ["蒸蒸日上", "泰山北斗"] , ["泰山北斗", "蒸蒸日上"], ["蒸蒸日上", "泰山北斗"], "蒸蒸日上", "蒸蒸日上"]
+        completions=[correct_completion, correct_completion2, correct_completion3, missing_answer, wrong_answer, missing_think],
+        target=["蒸蒸日上", "泰山北斗", "星期五","星期五", ["蒸蒸日上", "泰山北斗"] , ["泰山北斗", "蒸蒸日上"], ["蒸蒸日上", "泰山北斗"], "蒸蒸日上", "蒸蒸日上"]
     )
 
     print("Test Rewards:", test_rewards)
-    assert test_rewards == [2.0, 2.0, 2.0, 2.0, 2.0, 0.0, 0.0, 0.0], "Reward function is not working correctly."
+    assert test_rewards == [2.0, 2.0, 1.5, 1.5, 1.5, 0.0, 0.0, 0.0], "Reward function is not working correctly."
 
     print("Test format Rewards", test_reward_format)
-    assert test_reward_format == [1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0], "Reward function is not working correctly."
+    assert test_reward_format == [1.0, 1.1, 0.0, 0.0, 1.0583333333333333, 0.0], "Reward function is not working correctly."

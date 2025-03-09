@@ -229,9 +229,11 @@ def get_guess_word_dataset(tokenizer):
     
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
-    relative_path = os.path.join(script_dir, "output.json")
+    relative_path = os.path.join(script_dir, "train.json")
 
     dataset = GuessWordDataset.read_from_json(relative_path)
+
+    print(len(dataset))
 
     original_columns = dataset.column_names
 

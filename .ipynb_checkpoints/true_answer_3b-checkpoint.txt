@@ -1,0 +1,4 @@
+Completion: <think>根据提示词，我们可以想到古希腊的历史事件——马拉松战役。</think>
+<answer>马拉松</answer></thegrip>
+Target: ['马拉松']
+
