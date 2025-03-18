@@ -284,7 +284,7 @@ def main():
     parser = TrlParser((ModelConfig, ScriptArguments, GRPOConfig))
 
     model_args, script_args, training_args = parser.parse_args_and_config()
-
+    
     training_args.max_grad_norm = 1.0
 
     # Run the main training loop

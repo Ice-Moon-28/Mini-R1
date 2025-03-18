@@ -5,11 +5,11 @@ torch_dtype: bfloat16
 attn_implementation: flash_attention_2
 bf16: true
 tf32: true
-output_dir: /root/autodl-tmp/guessing_length
+output_dir: /root/autodl-tmp/countdown_chinese
 
 # Dataset arguments
-dataset_id_or_path: 'guessing'
-dataset_name: 'guessing'
+dataset_id_or_path: 'countdown_chinese'
+dataset_name: 'countdown_chinese'
 
 # Lora Arguments
 # No LoRA is used here
